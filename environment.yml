@@ -1,0 +1,12 @@
+name: dl_regularization
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python>=3.8
+  - pytorch>=1.10
+  - torchvision>=0.11
+  - matplotlib>=3.5
+  - numpy>=1.21
+  - scikit-learn>=1.0
+  - pip

@@ -1,0 +1,9 @@
+{
+  "SGD": 80.78,
+  "SGD+Momentum": 82.25,
+  "Nesterov": 83.96,
+  "AdaGrad": 83.18,
+  "RMSProp": 82.44,
+  "Adam": 83.36,
+  "AdamW": 83.8
+}

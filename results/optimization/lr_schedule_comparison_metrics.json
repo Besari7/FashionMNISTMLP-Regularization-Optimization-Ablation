@@ -1,0 +1,6 @@
+{
+  "No Schedule": 83.8,
+  "StepLR": 84.34,
+  "CosineAnnealingLR": 85.56,
+  "Warmup+Cosine": 85.77
+}

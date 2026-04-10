@@ -1,0 +1,81 @@
+{
+  "Baseline": {
+    "network.0.weight": 1.077457350127551,
+    "network.2.weight": 0.88043212890625,
+    "network.4.weight": 0.6439208984375,
+    "network.6.weight": 0.546875,
+    "TOTAL": 1.0055990171712608
+  },
+  "L1": {
+    "network.0.weight": 92.56143375318877,
+    "network.2.weight": 97.7386474609375,
+    "network.4.weight": 88.018798828125,
+    "network.6.weight": 48.671875,
+    "TOTAL": 93.39732546317217
+  },
+  "L2": {
+    "network.0.weight": 1.0281309789540818,
+    "network.2.weight": 0.8758544921875,
+    "network.4.weight": 0.6439208984375,
+    "network.6.weight": 0.15625,
+    "TOTAL": 0.9687076366922729
+  },
+  "Dropout": {
+    "network.0.weight": 0.993751992984694,
+    "network.3.weight": 0.88653564453125,
+    "network.6.weight": 0.7415771484375,
+    "network.9.weight": 0.46875,
+    "TOTAL": 0.953174423859015
+  },
+  "BatchNorm": {
+    "network.0.weight": 1.0943977200255102,
+    "network.1.weight": 0.0,
+    "network.3.weight": 0.89111328125,
+    "network.4.weight": 0.0,
+    "network.6.weight": 0.6195068359375,
+    "network.7.weight": 0.0,
+    "network.9.weight": 0.703125,
+    "TOTAL": 1.0174049740581999
+  },
+  "L2+Dropout": {
+    "network.0.weight": 0.9907625159438777,
+    "network.3.weight": 0.84228515625,
+    "network.6.weight": 0.665283203125,
+    "network.9.weight": 0.546875,
+    "TOTAL": 0.9365821283325801
+  },
+  "L2+BatchNorm": {
+    "network.0.weight": 1.092902981505102,
+    "network.1.weight": 0.0,
+    "network.3.weight": 0.911712646484375,
+    "network.4.weight": 0.0,
+    "network.6.weight": 0.6256103515625,
+    "network.7.weight": 0.0,
+    "network.9.weight": 0.46875,
+    "TOTAL": 1.0209296751635462
+  },
+  "Dropout+BatchNorm": {
+    "network.0.weight": 0.924495774872449,
+    "network.1.weight": 0.0,
+    "network.4.weight": 0.85906982421875,
+    "network.5.weight": 0.0,
+    "network.8.weight": 0.677490234375,
+    "network.9.weight": 0.0,
+    "network.12.weight": 0.234375,
+    "TOTAL": 0.8921018497631401
+  },
+  "DataAug": {
+    "network.0.weight": 0.8096500318877551,
+    "network.2.weight": 0.772857666015625,
+    "network.4.weight": 0.628662109375,
+    "network.6.weight": 0.46875,
+    "TOTAL": 0.7898991753276096
+  },
+  "LabelSmoothing": {
+    "network.0.weight": 1.0983836894132653,
+    "network.2.weight": 0.9124755859375,
+    "network.4.weight": 0.640869140625,
+    "network.6.weight": 0.390625,
+    "TOTAL": 1.0273102123813829
+  }
+}

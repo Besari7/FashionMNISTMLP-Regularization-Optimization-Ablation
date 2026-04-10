@@ -1,0 +1,19 @@
+============================================================
+  Backpropagation Sanity Check
+  Architecture : Linear(784,32)-ReLU-Linear(32,16)-ReLU-Linear(16,10)
+  Mini-batch size : 64
+  Forward loss    : 2.293322
+============================================================
+
+  Per-parameter gradient diagnostics:
+  Parameter                      Shape                 Grad Norm   Has Grad All Finite
+  --------------------------------------------------------------------------------
+  0.weight                       [32, 784]              0.554908        YES       True
+  0.bias                         [32]                   0.020860        YES       True
+  2.weight                       [16, 32]               0.126530        YES       True
+  2.bias                         [16]                   0.053502        YES       True
+  4.weight                       [10, 16]               0.098198        YES       True
+  4.bias                         [10]                   0.114675        YES       True
+
+  Overall check PASSED: True
+============================================================

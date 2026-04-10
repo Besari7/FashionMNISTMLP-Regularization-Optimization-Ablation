@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PyTorch / Data
+data/
+checkpoints/*.pt
+!checkpoints/foundations/*.pt
+!checkpoints/optimization/*.pt
+checkpoints/grid_search/
+
+# Results
+# Keep result artifacts visible in GitHub for grading/report verification.
+
+# Local logs / temporary bundles
+*.log
+supporting_experiments.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

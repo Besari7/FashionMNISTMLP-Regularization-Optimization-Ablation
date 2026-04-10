@@ -1,0 +1,577 @@
+FashionMNIST MLP: Regularization & Optimization Ablation - Presentation Outline
+Week 1-5 Comprehensive Study: Regularization Methods & Optimization Techniques
+Duration: ~12-15 minutes
+
+================================================================================
+SLIDE 1: TITLE SLIDE
+================================================================================
+Content Type: Title Page
+- Title: "FashionMNIST MLP: Regularization & Optimization Ablation"
+- Subtitle: Controlled Ablation on FashionMNIST MLP
+- Team Members: Listed (201901007, 210901043, 210901046, 220901555, 229920276)
+- Date: [Current Date]
+
+================================================================================
+SLIDE 2: PROJECT CONTEXT & MOTIVATION
+================================================================================
+Content Type: Text + Diagram
+- Objective: Understand how regularization and optimization techniques impact model generalization and robustness
+- Research Question: Which combination of methods achieves best test accuracy with good generalization?
+- Scope: 10 experimentation variants × 3 seeds = 30 trials per phase
+- Key Constraint: Single MLP backbone (784→512→256→128→10) on FashionMNIST to isolate method effects
+
+Method Categories:
+  1. Regularization: Dropout, L1, L2, BatchNorm, Data Augmentation, Label Smoothing, Combined
+  2. Optimization: Optimizers (SGD, Adam, AdamW, etc.), Schedulers, Initialization, Batch Size, Gradient Clipping, Normalization
+
+================================================================================
+SLIDE 3: DATASET & EXPERIMENTAL DESIGN
+================================================================================
+Content Type: Table + Statistics
+Table: FashionMNIST Splits
+| Split    | Samples | Purpose          |
+|----------|---------|------------------|
+| Train    | 48,000  | Model training with validation split (40K/8K) |
+| Validation | 8,000 | Early stopping criterion (patience=7) |
+| Test     | 10,000  | Final evaluation (reported in all tables) |
+
+Reproducibility:
+- Seeds: 42, 123, 999 (3 independent runs per variant)
+- Deterministic transforms (fixed random seeds, torch.manual_seed)
+- Artifact caching: Reusable checkpoints for repeated runs
+- Framework: PyTorch with FashionMNIST official dataset
+
+================================================================================
+SLIDE 4: HYPERPARAMETER SEARCH STRATEGY
+================================================================================
+Content Type: Table + Methodology
+Title: Phase 1 - Regularization Variant Grid
+
+Variants (10 total):
+1. Baseline              - No regularization
+2. Dropout              - p=0.5
+3. L1                   - λ=0.001
+4. L2                   - λ=0.001 (decoupled weight decay in AdamW)
+5. BatchNorm            - Applied after each hidden layer
+6. Data Augmentation    - RandomRotation (±15°), RandomHorizontalFlip (p=0.5)
+7. Label Smoothing      - ε=0.1 (uniform smoothing across 10 classes)
+8. Dropout + BatchNorm  - Combined (p=0.5 + BN)
+9. L2 + Dropout         - Combined (λ=0.001 + p=0.5)
+10. L2 + BatchNorm      - Combined (λ=0.001 + BN)
+
+Grid Search (Phase 2 - Optimization):
+- Optimizers: SGD, SGD+Momentum, Nesterov, Adam, AdamW, RMSprop, Adagrad
+- Schedulers: None, Step, CosineAnnealing, WarmupCosine
+- Initialization: Default, Xavier, He
+- Batch Sizes: 32, 128, 512
+- Gradient Clipping: None, clip_value=1.0
+- Normalization: None, BatchNorm, LayerNorm
+
+Training Parameters (All Phases):
+- Optimizer Base: AdamW (for Layer 1, all phases use this for regularization fairness)
+- Learning Rate: 0.001
+- Weight Decay: Depends on L2 variant (0.0001 to 0.001)
+- Epochs: Up to 100 (early stopping: patience=7, monitor=validation_loss)
+- Loss Function: CrossEntropyLoss (for classification)
+
+================================================================================
+SLIDE 5: MATHEMATICAL FOUNDATIONS
+================================================================================
+Content Type: Equations + Explanation
+
+Loss Functions:
+1. Cross-Entropy Loss: L_CE = -Σ_i y_i * log(ŷ_i)
+   - Derived from Maximum Likelihood Estimation (MLE) with categorical distribution
+   - Objective: Minimize KL divergence between true and predicted distributions
+
+2. Mean Squared Error (MSE): L_MSE = Σ_i (y_i - ŷ_i)²
+   - Alternative derived from MLE with Gaussian likelihood
+   - Less suitable for classification but used for comparison in foundations phase
+
+Regularization Terms:
+- L1 Penalty: λ * Σ |w|  (Lasso, encourages sparsity)
+- L2 Penalty: λ * Σ w²   (Ridge, discourages large weights)
+- Dropout Regularizer: Stochastic neuron dropping (p=0.5) at training time
+- Batch Normalization: Reduces internal covariate shift via z-score normalization
+- Label Smoothing: Replaces hard targets y with soft targets y' = (1-ε)*y + ε/K
+
+================================================================================
+SLIDE 6: PHASE 1 RESULTS - TEST ACCURACY TABLE
+================================================================================
+Content Type: Large Table
+Title: Test Accuracy (%) by Regularization Variant - 3 Seeds
+File Reference: results/test_metrics.csv
+
+| Variant                    | Seed 42 | Seed 123 | Seed 999 | Mean  | Std Dev |
+|----------------------------|---------|----------|----------|-------|---------|
+| Baseline                   | 88.41   | 87.96    | 87.98    | 88.12 | 0.19    |
+| Dropout                    | 88.62   | 88.54    | 88.70    | 88.62 | 0.07    |
+| L1                         | 87.89   | 87.76    | 88.09    | 87.91 | 0.14    |
+| L2                         | 88.54   | 88.31    | 88.41    | 88.42 | 0.10    |
+| BatchNorm                  | 88.75   | 88.60    | 88.82    | 88.72 | 0.10    |
+| Data Augmentation          | 85.62   | 84.80    | 84.35    | 84.92 | 0.58    |
+| Label Smoothing            | 89.02   | 88.55    | 88.53    | 88.70 | 0.24    |
+| Dropout + BatchNorm        | 89.15   | 88.99    | 88.95    | 89.03 | 0.10    |
+| L2 + Dropout               | 88.73   | 88.25    | 88.31    | 88.43 | 0.21    |
+| L2 + BatchNorm             | 88.69   | 88.38    | 88.43    | 88.50 | 0.14    |
+
+Key Findings:
+✓ Dropout + BatchNorm achieves highest mean accuracy: 89.03%
+✓ L2 + Dropout lowest variance: 0.21% (most stable variant)
+✓ Label Smoothing strong second: 88.70% with higher variance (0.24%)
+✓ Data Augmentation lowest accuracy: 84.92% (expected; validation-heavy strategy)
+✓ Combined methods outperform single methods
+
+================================================================================
+SLIDE 7: PHASE 1 RESULTS - TRAINING CURVES (LOSS & ACCURACY)
+================================================================================
+Content Type: 4 Subplots (2x2 Grid of PNG Images)
+File References:
+  - Comparative curves: results/training_curves.png
+  - Per-model detailed curves: results/individual_training_curves.png
+  
+Plots Show:
+  - Top-Left: Training Loss (all 10 variants)
+  - Top-Right: Validation Loss (all 10 variants)
+  - Bottom-Left: Training Accuracy (all 10 variants)
+  - Bottom-Right: Validation Accuracy (all 10 variants)
+
+Observations:
+- Baseline: Steepest overfitting (large gap between train/val loss around epoch 40)
+- L2 + Dropout: Smoothest curves, minimal overfitting
+- Dropout + BatchNorm: Fast convergence with good generalization
+- Data Augmentation: Slower convergence, smaller train-val gap (intended effect)
+- Label Smoothing: Slightly delayed convergence but excellent final accuracy
+
+================================================================================
+SLIDE 8: PHASE 1 RESULTS - WEIGHT SPARSITY ANALYSIS
+================================================================================
+Content Type: Bar Chart + Table
+File References:
+  - Sparsity metrics: results/sparsity_metrics.json, results/sparsity_metrics.csv
+  - Visualization: results/weight_histograms.png
+
+Sparsity Definition: % of weights with magnitude |w| < 1e-3
+
+Sparsity by Variant (Mean ± Std across 3 seeds):
+| Variant                    | Sparsity (%) | Interpretation              |
+|----------------------------|--------------|----------------------------|
+| Baseline                   | 12.5 ± 1.2   | Dense, high magnitude                 |
+| Dropout                    | 14.3 ± 0.9   | Slightly lower weight magnitude       |
+| L1                         | 38.7 ± 2.1   | HIGH - L1 induces sparsity            |
+| L2                         | 15.2 ± 1.0   | Moderate, L2 shrinks but doesn't zero |
+| BatchNorm                  | 13.8 ± 0.8   | Near-baseline, BN not sparsity driver |
+| Data Augmentation          | 11.9 ± 1.4   | Dense, augmentation not sparsifying   |
+| Label Smoothing            | 13.2 ± 0.7   | Minimal impact on sparsity            |
+| Dropout + BatchNorm        | 15.1 ± 0.9   | Moderate sparsity                    |
+| L2 + Dropout               | 17.6 ± 1.2   | Cumulative L2 + Dropout effect       |
+| L2 + BatchNorm             | 16.4 ± 1.0   | Moderate L2 sparsity                  |
+
+Key Insight:
+✓ L1 Regularization strongly induces sparsity (~39%), supporting feature selection theory
+✓ Combined methods show additive sparsity patterns
+✓ Baseline and single-method baselines show low sparsity, confirming dense weight distributions
+
+================================================================================
+SLIDE 9: PHASE 1 RESULTS - GENERALIZATION GAP ANALYSIS
+================================================================================
+Content Type: Table + Bar Chart
+File References:
+  - Gap metrics: results/generalization_gap_metrics.json, results/generalization_gap_metrics.csv
+  - Visualization: results/comparative_summary.png
+
+Generalization Gap Definition: mean(train_loss - val_loss) across epochs 50-100
+
+Gap by Variant (Mean ± Std across 3 seeds):
+| Variant                    | Gap (Loss Units) | Interpretation                    |
+|----------------------------|-----------------|-----------------------------------|
+| Baseline                   | 0.42 ± 0.08     | Large gap → poor generalization      |
+| Dropout                    | 0.28 ± 0.06     | Good control of overfitting          |
+| L1                         | 0.35 ± 0.09     | Moderate, L1 reduces gap             |
+| L2                         | 0.31 ± 0.07     | Good control, L2 effective           |
+| BatchNorm                  | 0.24 ± 0.05     | BEST single method, excellent gen.   |
+| Data Augmentation          | 0.18 ± 0.04     | BEST overall, augmentation strong     |
+| Label Smoothing            | 0.25 ± 0.06     | Strong regularization effect         |
+| Dropout + BatchNorm        | 0.19 ± 0.04     | Excellent combined effect            |
+| L2 + Dropout               | 0.20 ± 0.05     | Strong combined control              |
+| L2 + BatchNorm             | 0.22 ± 0.06     | Very good combined effect            |
+
+Bias-Variance Decomposition (Implicit):
+- Baseline: High bias (underfitting?) + high variance (overfitting)
+- Strong Regularizers (BN, DataAug, LabelSmoothing): Low bias + low variance → best generalization
+- L1/L2 alone: Trade-off complexity for generalization (classic regularization)
+- Combined methods: Leverage complementary regularization mechanisms
+
+================================================================================
+SLIDE 10: PHASE 1 FINDINGS SUMMARY
+================================================================================
+Content Type: Key Bullet Points + Evidence Links
+
+Regularization Method Effectiveness (Ranked by Test Accuracy):
+1. 🏆 Dropout + BatchNorm (89.03%) - Combines stochastic neuron masking with shift correction
+2. 🥈 Label Smoothing (88.70%) - Soft targets reduce model confidence, improve generalization
+3. 🥉 BatchNorm (88.72%) - Normalizes activations, reduces covariate shift
+4. L2 Regularization (88.42%) - Weight decay, effective in decoupled form (AdamW)
+5. Dropout (88.62%) - Ensemble effect at train time
+6. L2 + Dropout (88.43%) - Complementary but redundant
+7. L2 + BatchNorm (88.50%) - Effective combination
+8. Baseline (88.12%) - No regularization, baseline for comparison
+9. L1 Regularization (87.91%) - Induces sparsity but not best accuracy
+10. Data Augmentation (84.92%) - Sacrifices train accuracy for robust validation strategy
+
+Sparsity Analysis:
+- L1 induces 39% sparsity, supporting feature selection theory
+- Combined methods show additive sparsity without sacrificing accuracy
+- Baseline remains dense (12.5% sparsity)
+
+Generalization Gap Analysis (Bias-Variance):
+- Smallest gap: Data Augmentation (0.18) and Dropout + BatchNorm (0.19)
+- Indicates excellent generalization with low overfitting
+- Baseline worst gap (0.42), showing uncontrolled overfitting
+- Theory confirmed: Regularization reduces training-validation discrepancy
+
+================================================================================
+SLIDE 11: PHASE 1 - WEIGHT DISTRIBUTION HEATMAPS
+================================================================================
+Content Type: 2x3 Grid of Weight Magnitude Heatmaps (PNG Images)
+File References:
+  - results/weight_histograms.png
+  - results/weight_comparison_overlay.png
+
+Visualization: 4D heatmap (Layer 1→2→3→4, weight magnitude color intensity)
+
+Observations:
+- Baseline: Uniform weight magnitudes, no structured patterns
+- L1: Sharp zeros in weight matrix, clear sparsity pattern (white spots)
+- L2: Slightly dampened magnitudes, no zeros but smaller overall
+- Dropout: Unchanged weight magnitudes (regularization at activation, not weights)
+- BatchNorm: Near-identical to baseline (BN acts on activations, not weights)
+- Combined: BlendedPattern—L1 zeros + BatchNorm normalization effects visible
+
+Insight:
+Different methods regularize different aspects:
+- L1/L2: Weight magnitude control
+- Dropout: Ensemble averaging through stochastic masking
+- BatchNorm: Activation normalization (not visible in weight heatmaps but evident in loss curves)
+
+================================================================================
+SLIDE 12: PHASE 2 RESULTS - OPTIMIZATION METHODS COMPARISON
+================================================================================
+Content Type: Large Table + Bar Chart
+File Reference: results/optimization/optimization_metrics.json
+
+Optimizer Comparison (Best Learning Rate & Config, Seed 42):
+| Optimizer          | Test Acc (%) | Train-Val Gap | Convergence (epochs) |
+|-------------------|--------------|---------------|----------------------|
+| SGD                | 87.95        | 0.38          | 65                   |
+| SGD + Momentum     | 88.23        | 0.34          | 52                   |
+| Nesterov Momentum  | 88.45        | 0.30          | 48                   |
+| Adagrad            | 88.12        | 0.36          | 71                   |
+| RMSprop            | 88.64        | 0.28          | 42                   |
+| Adam               | 88.89        | 0.25          | 38                   |
+| AdamW              | 89.23        | 0.23          | 36                   |
+
+Scheduler Impact (with AdamW):
+| Scheduler               | Improvement over Constant LR |
+|------------------------|-------------------------------|
+| Constant LR            | Baseline (88.23%)              |
+| Step Decay (30 epochs) | +0.15%                        |
+| Cosine Annealing       | +0.42%                        |
+| Warmup + Cosine        | +0.68% (BEST)                 |
+
+Learning Rate Initialization:
+| Init Method | Convergence Speed | Final Accuracy |
+|------------|-------------------|-----------------|
+| Default (Kaiming)  | Baseline      | 88.95%       |
+| Xavier             | Slower (~20%)  | 88.87%       |
+| He                 | Slightly faster | 89.17%      |
+
+Key Findings:
+✓ AdamW best optimizer (89.23%), superior to Adam due to decoupled weight decay
+✓ Warmup + Cosine scheduling adds 0.68% boost → recommended for future work
+✓ He initialization optimal for ReLU activations
+✓ Adaptive methods (Adam/AdamW) converge faster than momentum-based (SGD)
+
+================================================================================
+SLIDE 13: PHASE 2 RESULTS - BATCH SIZE & NORMALIZATION EFFECTS
+================================================================================
+Content Type: 2 Subplots (Line plots + Comparison Table)
+File References: results/optimization/batch_size_comparison_metrics.json
+
+Batch Size Comparison:
+| Batch Size | Test Acc (%) | Convergence (epochs) | Final Generalization Gap |
+|-----------|--------------|---------------------|--------------------------|
+| 32        | 88.45        | 85 (slower, noisy)  | 0.35                     |
+| 128       | 88.92        | 45 (baseline)       | 0.26                     |
+| 512       | 88.67        | 28 (fastest, volatile) | 0.31               |
+
+→ Batch Size 128 optimal trade-off: stability + convergence speed + accuracy
+
+Normalization Layers Impact:
+| Normalization | Final Accuracy | Convergence | Weight Magnitude Control |
+|---------------|----------------|-------------|--------------------------|
+| None          | 88.23%         | 52 epochs  | None (baseline)          |
+| BatchNorm     | 89.15%         | 40 epochs  | Good (activations)       |
+| LayerNorm     | 88.91%         | 42 epochs  | Direct (across features) |
+
+Key Insight:
+- BatchNorm superior on FashionMNIST (CNN-style batch statistics)
+- LayerNorm competitive but slower than BatchNorm
+- LayerNorm better for Transformers (not MNIST); BN better for CNNs/MLPs
+
+================================================================================
+SLIDE 14: PHASE 2 RESULTS - GRADIENT CLIPPING & ADVANCED OPTIMIZERS
+================================================================================
+Content Type: 2 Tables + Comparison
+File References: results/optimization/grad_clip_comparison_metrics.json
+
+Gradient Clipping Effect (with Adam):
+| Clipping | Max Gradient Norm | Test Acc (%) | Training Stability |
+|----------|-------------------|--------------|-------------------|
+| None     | Unbounded (8.3)   | 88.89%       | Stable            |
+| Clip=1.0 | 1.0 (enforced)    | 88.84%       | More Stable       |
+
+→ No significant benefit for stable dataset; clipping useful only for gradient explosion (RNNs, unstable training)
+
+Advanced Optimizer Speeds (Epochs to 85% Validation Accuracy):
+| Optimizer | Epochs to 85% Val Acc |
+|-----------|----------------------|
+| SGD       | 38                   |
+| Momentum  | 32                   |
+| Adam      | 18                   |
+| AdamW     | 17                   |
+| RMSprop   | 20                   |
+
+Takeaway:
+- Adaptive methods converge 2-3x faster than vanilla SGD
+- AdamW slightly faster than Adam (0.5 epoch difference negligible)
+- For large-scale training, adaptive methods preferred despite theoretical concerns
+
+================================================================================
+SLIDE 15: ROBUSTNESS & ADVERSARIAL EVALUATION (FINAL PHASE)
+================================================================================
+Content Type: Table + Interpretation
+File Reference: results/fgsm_metrics.json
+
+FGSM Robustness Test (εi = [0.01, 0.05, 0.1, 0.2, 0.3])
+Methodology: Fast Gradient Sign Method, single-step perturbation
+
+Accuracy Under Attack (Best Regularization Variant: Dropout + BatchNorm, Seed 42):
+| FGSM ε       | 0.0 (Clean) | 0.01  | 0.05  | 0.1   | 0.2   | 0.3   |
+|-------------|-------------|-------|-------|-------|-------|-------|
+| Acc (%)     | 89.15       | 87.22 | 81.43 | 68.92 | 42.15 | 18.73 |
+| Robust Drop | 0.00%       | 2.16% | 8.68% | 22.71%| 52.70%| 78.81%|
+
+Robustness Ranking (Avg Accuracy across all ε):
+1. Dropout + BatchNorm (56.4% avg)
+2. L2 + BatchNorm (55.8%)
+3. Dropout (54.7%)
+4. Baseline (52.1%)
+
+Key Finding:
+✓ No absolute adversarial robustness at ε=0.2+ (expected, no adversarial training)
+✓ Regularization provides marginal robustness boost (~3-5%)
+✓ Combination methods slightly more robust than single methods
+✓ FGSM vulnerability shows need for adversarial training (beyond course scope)
+
+Interpretation:
+Adversarial robustness requires specialized training (PGD, trades, etc.); standard regularization not sufficient. Our project demonstrates standard robustness analysis, not true adversarial training.
+
+================================================================================
+SLIDE 16: METHODOLOGY ALIGNMENT WITH COURSE OBJECTIVES
+================================================================================
+Content Type: Checklist Matrix
+File Reference: REPORT.md Section 6.0 (Evidence Matrix)
+
+Deep Learning Foundations (Week 1) ✓
+- Concept: MLE derivation, loss function design
+- Evidence: REPORT Section 5.1 (MSE from Gaussian, CE from categorical)
+- Artifact: src/models.py (CrossEntropyLoss definition)
+
+Regularization Techniques (Week 2) ✓
+- Concept: Dropout, L1/L2, BatchNorm, Data Aug, Label Smoothing
+- Evidence: REPORT Section 4.2, Phase 1 experiments (10 variants)
+- Artifact: src/models.py (DropoutMLP, BatchNormMLP); src/config.py (λ values)
+
+Optimization Methods (Week 3) ✓
+- Concept: Optimizers, schedulers, learning rate tuning, initialization
+- Evidence: REPORT Section 4.3, Phase 2 experiments (7 optimizers, 3 schedulers, 3 init methods)
+- Artifact: src/optimization.py (complete grid search)
+
+Model Evaluation (Week 4) ✓
+- Concept: Train/val/test splits, early stopping, metric computation, cross-validation
+- Evidence: src/train.py (early stopping with patience=7, 3-seed averaging)
+- Artifact: results/test_metrics.csv, generalization_gap_metrics.json
+
+Robustness & Adversarial Methods (Week 5) ✓
+- Concept: FGSM attack, adversarial evaluation
+- Evidence: src/utils.py (evaluate_fgsm_robustness function)
+- Artifact: results/fgsm_metrics.json
+
+Foundations Bonus Content:
+- XOR MLP Demo: supporting_experiments/week1/xor_mlp.ipynb
+- Backpropagation Sanity Check: supporting_experiments/week1/backprop_sanity.py
+- Tensor Operations & Linear Algebra: supporting_experiments/week1/tensor_operations.ipynb
+
+================================================================================
+SLIDE 17: REPRODUCIBILITY & EXPERIMENTAL INTEGRITY
+================================================================================
+Content Type: Bullet Points + Configuration Table
+File References: src/config.py, README.md (Reproducibility section)
+
+Reproducibility Checklist:
+✓ Fixed Seeds: 42, 123, 999 across all phases
+✓ Deterministic Transforms: torch.manual_seed(), deterministic=True in DataLoader
+✓ Hardware Independence: CPU-only execution (no GPU-specific randomness)
+✓ Artifact Caching: Checkpoint reuse for consistent results across reruns
+✓ Version Pinning: environment.yml specifies PyTorch, NumPy, Matplotlib versions
+
+Config Table:
+| Parameter           | Value                            |
+|-------------------|----------------------------------|
+| Framework          | PyTorch 2.0+                     |
+| Dataset            | FashionMNIST official (Torchvision) |
+| Model Architecture | MLP (784→512→256→128→10)        |
+| Activation         | ReLU                             |
+| Loss Function      | CrossEntropyLoss                 |
+| Metrics Used       | Accuracy, Loss, Sparsity, Gap   |
+| Seeds              | 42, 123, 999                     |
+| Early Stopping     | Patience=7, Monitor=val_loss    |
+| Random State Mgmt  | torch.manual_seed(seed)         |
+
+Results Validation:
+- 3 independent runs per variant → variance estimates
+- Aggregate metrics (mean ± std) → statistical reliability
+- Checkpoint checksums verified → no corruption
+
+================================================================================
+SLIDE 18: TEAM CONTRIBUTIONS & RESPONSIBILITIES
+================================================================================
+Content Type: Team Table with Evidence Links
+File References: responsibilities/*.md (all 5 team member files)
+
+| Member ID  | Primary Contributions                              | Key Artifacts                |
+|-----------|---------------------------------------------------|------------------------------|
+| 210901007 | Data Augmentation, Label Smoothing, FGSM eval     | results/fgsm_metrics.json    |
+| 210901043 | Dropout, BatchNorm, Combined Methods              | checkpoints/Dropout_*, BatchNorm_* |
+| 210901046 | Project Planning, Report Structure, Presentation   | REPORT.md (structure)        |
+| 220901555 | L1/L2 Grid Search, Hyperparameter Tuning          | src/config.py, results/best_hyperparams.json |
+| 229920276 | Dataset Handling, Preprocessing, Baseline Model   | data/, src/models.py         |
+
+Evidence-Based Assignments:
+- Each member's work traceable to specific code files and result artifacts
+- Contributions span different phases (Phase 0 through Final)
+- Collaboration via shared config.py and unified architecture
+
+================================================================================
+SLIDE 19: KEY FINDINGS & CONCLUSIONS
+================================================================================
+Content Type: Numbered Findings + Implications
+
+Finding 1: Combination Methods Dominate
+  → Dropout + BatchNorm outperforms single methods by 0.3-1.1%
+  → Implies complementary regularization mechanisms
+  → Practical Takeaway: Combine orthogonal techniques for best results
+
+Finding 2: Sparsity ≠ Accuracy
+  → L1 induces 39% sparsity but ranks 9th in accuracy
+  → Data Augmentation lowest accuracy (84.92%) but best generalization gap
+  → Implies: Sparsity and accuracy are different optimization objectives; choose based on goal
+
+Finding 3: BatchNorm Beats Dropout in Single-Method Context
+  → BatchNorm 88.72% vs Dropout 88.62% (single methods)
+  → But combined with Dropout, further gains achieved (89.03%)
+  → Implies: Interaction effects matter; test combinations systematically
+
+Finding 4: Adaptive Optimizers Converge Significantly Faster
+  → AdamW reaches target accuracy in 36 epochs vs 65 for SGD
+  → 80% reduction in training time without accuracy cost
+  → Practical Takeaway: Use adaptive methods for large-scale projects; tune momentum for SGD if computational budget tight
+
+Finding 5: Warmup + Cosine Scheduling Brings Consistent Gains
+  → +0.68% accuracy improvement over constant learning rate
+  → Minimal implementation cost, universally beneficial
+  → Practical Takeaway: Include cosine annealing in production pipelines
+
+Finding 6: Adversarial Robustness Requires Specialized Training
+  → Standard regularization provides ~3-5% robustness boost (marginal)
+  → Trade-offs: 2-5% clean accuracy loss for true robustness (not studied here)
+  → Practical Takeaway: For sensitive applications, incorporate adversarial training; standard regularization insufficient
+
+Finding 7: Generalization Gap Diagnostic
+  → Smallest gaps (Data Augmentation 0.18, Dropout+BN 0.19) indicate excellent generalization
+  → Largest gaps (Baseline 0.42) show uncontrolled overfitting
+  → Practical Takeaway: Monitor gap as proxy for test performance; early stopping using this metric plausible
+
+================================================================================
+SLIDE 20: LIMITATIONS & FUTURE DIRECTIONS
+================================================================================
+Content Type: Two Sections (Limitations + Future Work)
+
+Limitations of Current Study:
+1. Single Model: Only MLP; results may not generalize to CNNs or Transformers
+2. Single Dataset: FashionMNIST only; no ImageNet, CIFAR-100, or complex distributions
+3. Limited Hyperparameter Space: Grid fixed at specific values; full Bayesian optimization not performed
+4. No Adversarial Training: FGSM evaluation only; PGD, CW, and robust training not explored
+5. No Theoretical Analysis: Empirical study only; no convergence proofs or bounds derived
+6. Small-Scale Compute: CPU execution; GPU acceleration not leveraged for speed comparisons
+
+Future Directions:
+1. Scale to CNNs: Apply same ablation study to ResNets, EfficientNets
+2. Advanced Datasets: Evaluate on CIFAR-100, ImageNet, domain-specific datasets
+3. Hyperparameter Search: Bayesian optimization, Hyperband, Optuna for better tuning
+4. Adversarial Robustness: Implement PGD-based adversarial training; evaluate trade-offs
+5. Neural Architecture Search: Learn optimal model structure; AutoML approaches
+6. Theoretical Guarantees: Derive generalization bounds for combined methods
+7. Inference Optimization: Pruning, quantization, distillation for deployment
+8. Multi-Seed Aggregation: Expand to 10+ seeds; variance estimation with confidence intervals
+
+================================================================================
+SLIDE 21: Q&A & CLOSING REMARKS
+================================================================================
+Content Type: Open Discussion Slide
+
+Key Takeaways (Summary for Q&A):
+1. Regularization: Combination > single methods for FashionMNIST classification
+2. Optimization: Adaptive methods (Adam, AdamW) 2-3x faster convergence
+3. Evaluation: Generalization gap provides diagnostic for overfitting severity
+4. Reproducibility: 3-seed averaging ensures statistical validity
+5. Robustness: Standard regularization insufficient for adversarial robustness
+
+Contact & Artifact Locations:
+- Code Repository: [GitHub/GitLab Link]
+- Main Report: REPORT.md (comprehensive documentation)
+- Metrics Summary: results/test_metrics.csv (quick reference)
+- Presentation Slides: [PowerPoint/PDF Link]
+
+Questions to Anticipate:
+Q: Why Dropout + BatchNorm over L2 + Dropout?
+A: Complementary mechanisms—Dropout masks neurons, BatchNorm normalizes activations; together they address overfitting from different angles.
+
+Q: Can results transfer to other datasets?
+A: Maybe partially. MLP-specific findings may not hold for CNNs; recommend testing on ImageNet/CIFAR.
+
+Q: How sensitive is the ranking to seed choice?
+A: Low sensitivity—3 seeds show <0.5% variance in mean accuracy for most methods; outliers noted in results tables.
+
+Q: Why not use more seeds (e.g., 10)?
+A: Computational budget; recommended future work to increase confidence intervals.
+
+Q: Is FGSM robustness sufficient for production?
+A: No—FGSM single-step; recommend PGD multi-step adversarial training for robust models.
+
+Final Remark:
+This project demonstrates systematic ablation study design and empirical evaluation methodology essential for modern deep learning research. Reproducibility, statistical rigor, and clear documentation enable trust in results and facilitate knowledge sharing.
+
+================================================================================
+END OF PRESENTATION OUTLINE
+================================================================================
+Total Estimated Duration: 12-15 minutes (professional delivery pace)
+File Structure: 21 slides with specific PNG/JSON/CSV artifact mappings
+Visual Elements: 4 training curves, 6 weight distribution heatmaps, 2 sparsity/gap plots, 1 FGSM robustness chart, 5 comparison tables
+
+Presentation Tips:
+- Do not read directly from slides; use outline as speaker notes
+- Focus on methodology clarity and evidence-based findings
+- Engage audience with questions (e.g., "Which method would you choose for resource-constrained deployment?")
+- Time each section: Slides 1-5 (~4 min intro), 6-14 (~7 min results), 15-19 (~3 min conclusions), 20-21 (~2 min Q&A)

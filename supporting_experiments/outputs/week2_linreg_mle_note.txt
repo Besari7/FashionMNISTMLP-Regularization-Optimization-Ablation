@@ -1,0 +1,17 @@
+
+MLE and MSE Equivalence under Gaussian Noise
+============================================
+Let target y_i = theta^T x_i + epsilon_i, where epsilon_i ~ N(0, sigma^2).
+The probability of y_i given x_i is normally distributed:
+p(y_i | x_i; theta) = (1 / sqrt(2*pi*sigma^2)) * exp( - (y_i - theta^T x_i)^2 / (2*sigma^2) )
+
+To find the Maximum Likelihood Estimate (MLE) for theta, we maximize the log-likelihood (LL):
+LL(theta) = sum [ log(p(y_i | x_i; theta)) ]
+          = sum [ -log(sqrt(2*pi*sigma^2)) - (y_i - theta^T x_i)^2 / (2*sigma^2) ]
+
+Notice that the first term is a constant with respect to theta.
+Therefore, maximizing LL(theta) is exactly mathematically equivalent to MINIMIZING the second term:
+minimize: sum [ (y_i - theta^T x_i)^2 ]
+
+This is exactly the Mean Squared Error (MSE) cost function!
+Thus: MLE under Gaussian Noise === Minimizing MSE.

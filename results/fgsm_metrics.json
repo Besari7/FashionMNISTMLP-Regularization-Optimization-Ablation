@@ -1,0 +1,42 @@
+{
+  "Baseline": {
+    "clean_acc": 88.31,
+    "adv_acc": 68.1
+  },
+  "L1": {
+    "clean_acc": 87.48,
+    "adv_acc": 65.63
+  },
+  "L2": {
+    "clean_acc": 88.14,
+    "adv_acc": 66.3
+  },
+  "Dropout": {
+    "clean_acc": 87.93,
+    "adv_acc": 69.81
+  },
+  "BatchNorm": {
+    "clean_acc": 88.11,
+    "adv_acc": 64.06
+  },
+  "L2+Dropout": {
+    "clean_acc": 88.42,
+    "adv_acc": 70.27
+  },
+  "L2+BatchNorm": {
+    "clean_acc": 88.93,
+    "adv_acc": 59.79
+  },
+  "Dropout+BatchNorm": {
+    "clean_acc": 89.29,
+    "adv_acc": 62.0
+  },
+  "DataAug": {
+    "clean_acc": 84.94,
+    "adv_acc": 62.73
+  },
+  "LabelSmoothing": {
+    "clean_acc": 88.85,
+    "adv_acc": 68.16
+  }
+}

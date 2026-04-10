@@ -1,0 +1,36 @@
+{
+  "optimizer": {
+    "SGD": 80.78,
+    "SGD+Momentum": 82.25,
+    "Nesterov": 83.96,
+    "AdaGrad": 83.18,
+    "RMSProp": 82.44,
+    "Adam": 83.36,
+    "AdamW": 83.8
+  },
+  "initialization": {
+    "Default": 83.76,
+    "Xavier": 83.38,
+    "He": 83.8
+  },
+  "lr_schedule": {
+    "No Schedule": 83.8,
+    "StepLR": 84.34,
+    "CosineAnnealingLR": 85.56,
+    "Warmup+Cosine": 85.77
+  },
+  "grad_clip": {
+    "No Clipping": 83.8,
+    "Gradient Clip (max_norm=1.0)": 83.12
+  },
+  "batch_size": {
+    "BS=32": 83.43,
+    "BS=128": 83.8,
+    "BS=512": 83.46
+  },
+  "normalization": {
+    "None": 83.8,
+    "BatchNorm": 84.5,
+    "LayerNorm": 82.42
+  }
+}

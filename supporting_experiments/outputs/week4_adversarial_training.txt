@@ -1,0 +1,16 @@
+=========================================================
+  Adversarial Training Evaluation (FGSM eps=0.1)
+=========================================================
+
+[Model 1: Standard Training]
+  Clean Test Accuracy : 84.95%
+  FGSM Test Accuracy  : 42.20%   <-- Vulnerable (Huge Drop)
+
+[Model 2: Adversarial Training]
+  Clean Test Accuracy : 83.75%    <-- Slight drop expected vs pure clean
+  FGSM Test Accuracy  : 69.00%      <-- Robust (Maintains accuracy!)
+
+Conclusion: 
+Adversarial training acts as a powerful regularizer, forcing the model 
+to learn robust features rather than brittle, easy-to-fool noise patterns.
+=========================================================
